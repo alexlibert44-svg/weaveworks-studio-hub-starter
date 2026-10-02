@@ -1,0 +1,24 @@
+- [x] Replace the shared palette and surfaces throughout LingoFlow without changing behavior.
+- [x] Align buttons, navigation, tabs, forms, badges, and training feedback.
+- [x] Verify mobile and Arabic layouts and inspect remaining old colors.
+- [x] Restore the Home frame with purple-blue depth, decorative circles, English brand name, and a local-time greeting; remove its review button.
+- [x] Refine shared corner shapes while preserving existing page structures and interactions.
+- [x] Check the Home screen on small English and Arabic mobile layouts.
+- [x] Refresh the existing LingoFlow visual identity across shared controls, surfaces, and progress indicators.
+- [x] Carry the Home signature frame into Review and Profile without changing their behavior.
+- [x] Verify signed-in Home, Review, Profile, and a learning screen on desktop and mobile.
+- [x] Unify Profile identity and Review header with the shared signature frame, remove the two requested Profile statistics, and round the Home add control.
+- [x] Inspect signed-in Home, Profile, and Review on mobile and desktop after the correction.
+- [x] Restore the original signature frame and keep Profile photo/name inside it with progress below.
+- [x] Keep the Settings daily goal saved and visible, and add a Home language selector with flags.
+- [x] Verify language-isolated sets, review, progress, photo editing and mobile layouts in a signed-in browser.
+- [x] Fix Home language list touch scrolling and reuse the selector in Settings without changing saved language data.
+- [x] Refine the Profile photo ring and shared light-blue buttons; verify mobile, language independence, and touch interaction.
+- [x] Improve shared multilingual typography and font rendering across the app.
+- [x] Cap the Home daily-goal count and percentage at the configured target.
+- [x] Remove resize handles and extra focus-border artifacts from exercise textareas.
+- [x] Refine shared cards, signature frames, and primary actions with the selected cyan-to-purple glass treatment.
+- [x] Verify completed-session points remain preserved when a word set is deleted.
+- [x] Restore the Premium crown and on-demand offer cards without replacing learning content.
+- [x] Standardize graphical language flags and make the recording microphone icon white.
+- [x] Verify Premium navigation, gate dismissal, flags, and recording control in the preview.

@@ -10,33 +10,206 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AddRouteImport } from './routes/add'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as PremiumRouteImport } from './routes/premium'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ReviewRouteImport } from './routes/review'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
+import { Route as SetsIndexRouteImport } from './routes/sets.index'
+import { Route as SetsSetIdIndexRouteImport } from './routes/sets.$setId.index'
+import { Route as SetsSetIdFormsFormIdRouteImport } from './routes/sets.$setId.forms.$formId'
+import { Route as SetsSetIdWordsWordIdRouteImport } from './routes/sets.$setId.words.$wordId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AddRoute = AddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeRoute = PracticeRouteImport.update({
+  id: '/practice',
+  path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PremiumRoute = PremiumRouteImport.update({
+  id: '/premium',
+  path: '/premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetsIndexRoute = SetsIndexRouteImport.update({
+  id: '/sets/',
+  path: '/sets/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetsSetIdIndexRoute = SetsSetIdIndexRouteImport.update({
+  id: '/sets/$setId/',
+  path: '/sets/$setId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetsSetIdFormsFormIdRoute = SetsSetIdFormsFormIdRouteImport.update({
+  id: '/sets/$setId/forms/$formId',
+  path: '/sets/$setId/forms/$formId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetsSetIdWordsWordIdRoute = SetsSetIdWordsWordIdRouteImport.update({
+  id: '/sets/$setId/words/$wordId',
+  path: '/sets/$setId/words/$wordId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/auth': typeof AuthRoute
+  '/practice': typeof PracticeRoute
+  '/premium': typeof PremiumRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/review': typeof ReviewRoute
+  '/settings': typeof SettingsRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/sets/': typeof SetsIndexRoute
+  '/sets/$setId/': typeof SetsSetIdIndexRoute
+  '/sets/$setId/forms/$formId': typeof SetsSetIdFormsFormIdRoute
+  '/sets/$setId/words/$wordId': typeof SetsSetIdWordsWordIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/auth': typeof AuthRoute
+  '/practice': typeof PracticeRoute
+  '/premium': typeof PremiumRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/review': typeof ReviewRoute
+  '/settings': typeof SettingsRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/sets': typeof SetsIndexRoute
+  '/sets/$setId': typeof SetsSetIdIndexRoute
+  '/sets/$setId/forms/$formId': typeof SetsSetIdFormsFormIdRoute
+  '/sets/$setId/words/$wordId': typeof SetsSetIdWordsWordIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/auth': typeof AuthRoute
+  '/practice': typeof PracticeRoute
+  '/premium': typeof PremiumRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/review': typeof ReviewRoute
+  '/settings': typeof SettingsRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/sets/': typeof SetsIndexRoute
+  '/sets/$setId/': typeof SetsSetIdIndexRoute
+  '/sets/$setId/forms/$formId': typeof SetsSetIdFormsFormIdRoute
+  '/sets/$setId/words/$wordId': typeof SetsSetIdWordsWordIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/add'
+    | '/auth'
+    | '/practice'
+    | '/premium'
+    | '/profile'
+    | '/reset-password'
+    | '/review'
+    | '/settings'
+    | '/api/tts'
+    | '/sets/'
+    | '/sets/$setId/'
+    | '/sets/$setId/forms/$formId'
+    | '/sets/$setId/words/$wordId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/add'
+    | '/auth'
+    | '/practice'
+    | '/premium'
+    | '/profile'
+    | '/reset-password'
+    | '/review'
+    | '/settings'
+    | '/api/tts'
+    | '/sets'
+    | '/sets/$setId'
+    | '/sets/$setId/forms/$formId'
+    | '/sets/$setId/words/$wordId'
+  id:
+    | '__root__'
+    | '/'
+    | '/add'
+    | '/auth'
+    | '/practice'
+    | '/premium'
+    | '/profile'
+    | '/reset-password'
+    | '/review'
+    | '/settings'
+    | '/api/tts'
+    | '/sets/'
+    | '/sets/$setId/'
+    | '/sets/$setId/forms/$formId'
+    | '/sets/$setId/words/$wordId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AddRoute: typeof AddRoute
+  AuthRoute: typeof AuthRoute
+  PracticeRoute: typeof PracticeRoute
+  PremiumRoute: typeof PremiumRoute
+  ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  ReviewRoute: typeof ReviewRoute
+  SettingsRoute: typeof SettingsRoute
+  ApiTtsRoute: typeof ApiTtsRoute
+  SetsIndexRoute: typeof SetsIndexRoute
+  SetsSetIdIndexRoute: typeof SetsSetIdIndexRoute
+  SetsSetIdFormsFormIdRoute: typeof SetsSetIdFormsFormIdRoute
+  SetsSetIdWordsWordIdRoute: typeof SetsSetIdWordsWordIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +221,115 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/add': {
+      id: '/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof AddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice': {
+      id: '/practice'
+      path: '/practice'
+      fullPath: '/practice'
+      preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/premium': {
+      id: '/premium'
+      path: '/premium'
+      fullPath: '/premium'
+      preLoaderRoute: typeof PremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sets/': {
+      id: '/sets/'
+      path: '/sets'
+      fullPath: '/sets/'
+      preLoaderRoute: typeof SetsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sets/$setId/': {
+      id: '/sets/$setId/'
+      path: '/sets/$setId'
+      fullPath: '/sets/$setId/'
+      preLoaderRoute: typeof SetsSetIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sets/$setId/forms/$formId': {
+      id: '/sets/$setId/forms/$formId'
+      path: '/sets/$setId/forms/$formId'
+      fullPath: '/sets/$setId/forms/$formId'
+      preLoaderRoute: typeof SetsSetIdFormsFormIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sets/$setId/words/$wordId': {
+      id: '/sets/$setId/words/$wordId'
+      path: '/sets/$setId/words/$wordId'
+      fullPath: '/sets/$setId/words/$wordId'
+      preLoaderRoute: typeof SetsSetIdWordsWordIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AddRoute: AddRoute,
+  AuthRoute: AuthRoute,
+  PracticeRoute: PracticeRoute,
+  PremiumRoute: PremiumRoute,
+  ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  ReviewRoute: ReviewRoute,
+  SettingsRoute: SettingsRoute,
+  ApiTtsRoute: ApiTtsRoute,
+  SetsIndexRoute: SetsIndexRoute,
+  SetsSetIdIndexRoute: SetsSetIdIndexRoute,
+  SetsSetIdFormsFormIdRoute: SetsSetIdFormsFormIdRoute,
+  SetsSetIdWordsWordIdRoute: SetsSetIdWordsWordIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
