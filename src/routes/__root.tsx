@@ -12,6 +12,10 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AppGate } from "@/components/verba/AppGate";
+import { AppErrorBoundary } from "@/components/verba/AppErrorBoundary";
+import { Toaster } from "@/components/ui/sonner";
+import { isAuthFailure, recoverSession } from "@/lib/verba/session-token";
 
 function NotFoundComponent() {
   return (
@@ -38,9 +42,24 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
+  const authProblem = isAuthFailure(error);
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+  useEffect(() => {
+    // An expired sign-in should send the learner to the sign-in page,
+    // never leave them on a crashed screen.
+    if (!authProblem) return;
+    void recoverSession().then((recovered) => {
+      if (recovered) {
+        router.invalidate();
+        reset();
+      } else {
+        void router.navigate({ to: "/auth" });
+      }
+    });
+  }, [authProblem, router, reset]);
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -78,16 +97,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "LingoFlow — Learn words in real sentences" },
+      {
+        name: "description",
+        content:
+          "LingoFlow turns the words you choose into natural sentences, listening, writing, speaking and recall practice with spaced repetition.",
+      },
+      { name: "author", content: "LingoFlow" },
+      { property: "og:title", content: "LingoFlow — Learn words in real sentences" },
+      {
+        property: "og:description",
+        content: "Pick your languages, add 4 words, and practice them in real sentences every day.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -119,9 +148,14 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-    </QueryClientProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AppGate>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </AppGate>
+        <Toaster />
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
