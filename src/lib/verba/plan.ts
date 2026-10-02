@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,28 +22,47 @@ async function fetchEntitlement(): Promise<Plan> {
   return "free";
 }
 
-async function setsCreatedToday(deviceId: string): Promise<number> {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const { count, error } = await supabase
+const WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/** Creation timestamps (ms, UTC) of sets made within the rolling 24-hour window, oldest first. */
+async function setsCreatedInWindow(deviceId: string): Promise<number[]> {
+  const since = new Date(Date.now() - WINDOW_MS).toISOString();
+  const { data, error } = await supabase
     .from("word_sets")
-    .select("id", { count: "exact", head: true })
+    .select("created_at")
     .eq("device_id", deviceId)
-    .gte("created_at", start.toISOString());
+    .gte("created_at", since)
+    .order("created_at", { ascending: true });
   if (error) throw error;
-  return count ?? 0;
+  return (data ?? []).map((r) => new Date(r.created_at as string).getTime());
 }
 
 export function usePlan(deviceId: string) {
   const plan = useQuery({ queryKey: ["plan", deviceId], queryFn: fetchEntitlement });
-  const today = useQuery({ queryKey: ["sets-today", deviceId], queryFn: () => setsCreatedToday(deviceId), enabled: PREMIUM_ENABLED });
+  const today = useQuery({ queryKey: ["sets-today", deviceId], queryFn: () => setsCreatedInWindow(deviceId), enabled: PREMIUM_ENABLED });
+  const [now, setNow] = useState(() => Date.now());
   const isPremium = !PREMIUM_ENABLED || plan.data === "premium";
-  const used = today.data ?? 0;
+  const active = (today.data ?? []).filter((ts) => ts + WINDOW_MS > now);
+  const used = active.length;
+  const limitReached = !isPremium && used >= FREE_DAILY_SETS;
+  // When the limit is reached, the next slot frees exactly 24h after the oldest counted creation.
+  const nextSlotAt = limitReached ? (active[used - FREE_DAILY_SETS] ?? now) + WINDOW_MS : null;
+
+  useEffect(() => {
+    if (nextSlotAt === null) return;
+    const id = window.setInterval(() => {
+      setNow(Date.now());
+    }, Math.min(30_000, Math.max(250, nextSlotAt - Date.now())));
+    return () => window.clearInterval(id);
+  }, [nextSlotAt]);
+
   return {
     plan: plan.data ?? "free",
     isPremium,
     loaded: !PREMIUM_ENABLED || (plan.isSuccess && today.isSuccess),
     /** null = unlimited. */
     remaining: isPremium ? null : Math.max(0, FREE_DAILY_SETS - used),
+    /** Epoch ms when the next creation slot opens, or null if one is available. */
+    nextSlotAt,
   };
 }

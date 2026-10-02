@@ -69,7 +69,8 @@ export function I18nProvider({
       targetSpeech: speechLocale(target.code),
       languages: LANGUAGES,
       languageName: (code: string) => localizedLanguageName(code, locale),
-      countryName: (code: string) => localizedCountryName(code, locale),
+      // Country names always follow the learner's native language (never the target).
+      countryName: (code: string) => localizedCountryName(code, native.code),
     };
   }, [nativeCode, targetCode]);
 
