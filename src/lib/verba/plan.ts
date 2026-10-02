@@ -46,7 +46,7 @@ export function usePlan(deviceId: string) {
   const used = active.length;
   const limitReached = !isPremium && used >= FREE_DAILY_SETS;
   // When the limit is reached, the next slot frees exactly 24h after the oldest counted creation.
-  const nextSlotAt = limitReached ? active[used - FREE_DAILY_SETS] + WINDOW_MS : null;
+  const nextSlotAt = limitReached ? (active[used - FREE_DAILY_SETS] ?? now) + WINDOW_MS : null;
 
   useEffect(() => {
     if (nextSlotAt === null) return;
