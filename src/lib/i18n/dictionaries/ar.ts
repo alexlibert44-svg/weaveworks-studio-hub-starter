@@ -231,7 +231,7 @@ export const ar: Dictionary = {
   "train.speakHint": "استمع، ثم سجّل نفسك وقارن.",
   "train.record": "ابدأ التسجيل",
   "train.stopRecording": "أوقف التسجيل",
-  "train.recordAgain": "سجّل مرة أخرى",
+  "train.recordAgain": "إعادة التسجيل",
   "train.playback": "تسجيلك",
   "train.micDenied": "تم حجب الوصول إلى الميكروفون، لذا التسجيل غير متاح. يمكنك تقييم نفسك.",
   "train.selfCheckNote": "قارن تسجيلك بالنطق الأصلي ثم قيّم نفسك بصدق.",
