@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, Check } from "lucide-react";
 import { useState } from "react";
 
@@ -8,9 +8,13 @@ import { useLearner } from "@/components/verba/AppGate";
 import { PremiumCrown } from "@/components/verba/Premium";
 import { useI18n, type MessageKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { usePlan } from "@/lib/verba/plan";
+import { PREMIUM_ENABLED, usePlan } from "@/lib/verba/plan";
 
 export const Route = createFileRoute("/premium")({
+  // Pricing page is hidden while Premium is switched off.
+  beforeLoad: () => {
+    if (!PREMIUM_ENABLED) throw redirect({ to: "/", replace: true });
+  },
   head: () => ({
     meta: [
       { title: "Premium Plans — LingoFlow" },

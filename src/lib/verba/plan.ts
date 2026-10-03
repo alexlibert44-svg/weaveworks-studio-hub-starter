@@ -15,8 +15,12 @@ export type Plan = "free" | "premium";
 
 export const FREE_DAILY_SETS = 4;
 
-/** UI-only freemium layer. Real entitlement and limit enforcement will plug in here later. */
-export const PREMIUM_ENABLED = true;
+/**
+ * Master switch for the freemium layer. TEMPORARILY false for testing: every
+ * user gets full access, crowns/paywalls/pricing page are hidden. Set back to
+ * true to restore Premium.
+ */
+export const PREMIUM_ENABLED = false;
 
 async function fetchEntitlement(): Promise<Plan> {
   return "free";
