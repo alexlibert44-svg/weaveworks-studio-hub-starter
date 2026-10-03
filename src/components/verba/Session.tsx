@@ -472,7 +472,7 @@ function RecognitionStep({
 
 /* --------------------------------- speak ---------------------------------- */
 
-type RecorderState = "idle" | "recording" | "analyzing" | "scored" | "denied";
+type RecorderState = "idle" | "recording" | "analyzing" | "scored" | "denied" | "failed";
 
 function SpeakStep({
   unit,
@@ -493,6 +493,7 @@ function SpeakStep({
   const [best, setBest] = useState(0);
   const [tries, setTries] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<"recording" | "analysis" | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -503,12 +504,25 @@ function SpeakStep({
     [],
   );
 
+  /**
+   * Technical failures (no/short/silent/undecodable recording, or the analysis
+   * service failing) are never learning mistakes: no score is stored, no
+   * attempt is consumed, and the exercise stays as it is.
+   */
+  const fail = (kind: "recording" | "analysis", message: string | null = null) => {
+    setResult(null);
+    setFailure(kind);
+    setError(message);
+    setState("failed");
+  };
+
   /** Sends the recording for real transcription-based scoring. */
   const analyse = async (blob: Blob) => {
+    if (blob.size < 2048) return fail("recording");
     setState("analyzing");
     setError(null);
-    const attemptIndex = tries + 1;
-    setTries(attemptIndex);
+    setFailure(null);
+    let base64: string;
     try {
       const buffer = await blob.arrayBuffer();
       let binary = "";
@@ -516,14 +530,23 @@ function SpeakStep({
       for (let i = 0; i < bytes.length; i += 0x8000) {
         binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
       }
+      base64 = btoa(binary);
+    } catch {
+      return fail("recording");
+    }
+    try {
       const analysis = await evaluatePronunciation({
         data: {
-          audioBase64: btoa(binary),
+          audioBase64: base64,
           mimeType: blob.type || "audio/webm",
           target,
           locale,
         },
       });
+      // Nothing recognised at all means a silent/unusable recording, not a wrong answer.
+      if (!analysis.transcript.trim()) return fail("recording");
+      const attemptIndex = tries + 1;
+      setTries(attemptIndex);
       setResult(analysis);
       setBest((value) => Math.max(value, analysis.score));
       setState("scored");
@@ -542,14 +565,9 @@ function SpeakStep({
       // An expired sign-in must not break the microphone: renew it silently,
       // and only ask the user to sign in again when renewal is impossible.
       const signedOut = await handleAuthFailure(cause);
-      setError(
-        signedOut
-          ? t("auth.expired")
-          : cause instanceof Error && cause.message
-            ? cause.message
-            : t("train.pronFailed"),
-      );
-      setState("idle");
+      const message = cause instanceof Error ? cause.message : "";
+      if (/too short/i.test(message)) return fail("recording");
+      fail("analysis", signedOut ? t("auth.expired") : null);
     }
   };
 
@@ -558,13 +576,23 @@ function SpeakStep({
       setState("denied");
       return;
     }
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setState("denied");
+      return;
+    }
+    try {
       streamRef.current = stream;
       const recorder = new MediaRecorder(stream);
       const chunks: Blob[] = [];
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunks.push(event.data);
+      };
+      recorder.onerror = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        fail("recording");
       };
       recorder.onstop = () => {
         stream.getTracks().forEach((track) => track.stop());
@@ -574,9 +602,12 @@ function SpeakStep({
       recorderRef.current = recorder;
       recorder.start();
       setResult(null);
+      setFailure(null);
+      setError(null);
       setState("recording");
     } catch {
-      setState("denied");
+      stream.getTracks().forEach((track) => track.stop());
+      fail("recording");
     }
   };
 
@@ -672,10 +703,13 @@ function SpeakStep({
           </div>
         ) : null}
 
-        {error ? (
-          <p className="text-sm font-semibold text-destructive" role="alert">
-            {error}
-          </p>
+        {state === "failed" ? (
+          <div className="card-surface p-4" role="alert">
+            <p className="text-sm font-bold">{t("train.recordFailedTitle")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {error ?? (failure === "analysis" ? t("train.analysisFailedBody") : t("train.recordFailedBody"))}
+            </p>
+          </div>
         ) : null}
 
         {state === "denied" ? (
@@ -686,6 +720,32 @@ function SpeakStep({
       </div>
 
       <div className="mt-auto space-y-2.5 pt-6">
+        {state === "failed" ? (
+          <>
+            <Button size="lg" className="w-full rounded-2xl" onClick={() => void start()}>
+              <Mic className="size-4" /> {t("train.recordAgain")}
+            </Button>
+            {/* Continuing after a technical failure stores nothing for pronunciation. */}
+            <Button
+              size="lg"
+              variant="secondary"
+              className="w-full rounded-2xl"
+              onClick={() => onDone(0, "mic-denied")}
+            >
+              {t("train.continueNoScore")} <ArrowRight className="size-4 rtl:rotate-180" />
+            </Button>
+          </>
+        ) : null}
+        {state === "idle" || (state === "scored" && !passed) ? (
+          <Button
+            size="lg"
+            variant="ghost"
+            className="w-full rounded-2xl"
+            onClick={() => fail("recording")}
+          >
+            {t("train.couldntRecord")}
+          </Button>
+        ) : null}
         {state === "denied" ? (
           <Button
             size="lg"
@@ -696,7 +756,7 @@ function SpeakStep({
             {t("common.skip")} <ArrowRight className="size-4 rtl:rotate-180" />
           </Button>
         ) : null}
-        {result ? (
+        {result && state === "scored" ? (
           <Button
             size="lg"
             className="w-full rounded-2xl"
