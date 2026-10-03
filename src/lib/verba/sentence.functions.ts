@@ -37,9 +37,10 @@ export const evaluateSentence = createServerFn({ method: "POST" })
 Check: grammar, spelling, word usage, sentence structure, and whether the target word (or a correct inflection) is used naturally and with a fitting meaning.
 Preserve the learner's intended meaning. Distinguish genuine errors from acceptable alternative expressions: valid alternatives are NOT errors.
 "correct" is true only if the word is used correctly AND the sentence is grammatical and understandable (tiny style issues are OK).
-"feedback": a concise explanation, written ONLY in ${data.nativeLanguage}, naming the specific mistakes in THIS sentence (quote the wrong parts). If there are no mistakes, briefly confirm what is done well.
+Never "correct" a sentence that is already correct: if it is correct, set corrected=null and say clearly that it is correct. Never invent grammar rules or meanings.
+"feedback": a concise, precise, grammatically correct explanation, written ONLY in ${data.nativeLanguage}, naming the specific mistakes in THIS sentence (quote the wrong parts). For each mistake say exactly what was wrong, what the right form is, and why (e.g. wrong tense: name the tense used, the correct tense, and why it fits this context; word order: state the exact rule; verb form: give the correct form and why it is required). Never write vague text like "the grammar is wrong". Use grammar terms only when they help. If there are no mistakes, briefly confirm that the sentence is correct.
 "corrected": a natural corrected ${data.targetLanguage} sentence that keeps the learner's meaning when changes are needed, else null.
-"why": when corrected is not null, one short sentence in ${data.nativeLanguage} explaining why the corrected version is more appropriate; else null.
+"why": when corrected is not null, one or two short sentences in ${data.nativeLanguage} stating exactly what changed between the learner's sentence and the corrected one and why; else null.
 Return JSON only: {"uses_word":bool,"correct":bool,"feedback":"","corrected":null,"why":null}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

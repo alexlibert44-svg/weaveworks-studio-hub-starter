@@ -47,8 +47,8 @@ Never invent forms. Never repeat the original word itself as a form.
 "form_kind" is one of: tense, participle, conjugation, plural, other.
 "is_regular" is true for regular formation, false for irregular, null if not applicable.
 "translation" is the meaning of the form in the NATIVE language.
-"explanation" is 1-2 short sentences in the NATIVE language saying what changed, why, and what the form is used for.
-"example" is a natural 4-12 word TARGET-language sentence containing exactly that form; "example_translation" is its NATIVE translation.
+"explanation" is a short, structured, linguistically accurate explanation in the NATIVE language about exactly this form, covering only what applies: what the form is, when it is used, its basic structure (how it is built from the word), what it expresses, important usage conditions, and any irregularity. Accuracy over length: no filler, no unsupported claims; if a point cannot be stated confidently, leave it out.
+"example" is a natural 4-12 word TARGET-language sentence that uses exactly that form correctly, matching its label; "example_translation" is its NATIVE translation.
 "pronunciation" is a short readable phonetic hint.
 Order forms in a meaningful educational order (e.g. for English verbs: 3rd person singular, past simple, past participle, -ing form).
 "category" is the word's grammatical category written in the NATIVE language (e.g. "Verb", "Noun").
