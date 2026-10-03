@@ -19,3 +19,4 @@
 - Freemium: `src/lib/verba/plan.ts` is the single entitlement source; Premium UI and tap-triggered gates use `usePlan` + `PremiumGate`. Why: real billing/server enforcement plugs in there later.
 - Completed training sessions retain their points when a word set is deleted; the session foreign key uses `ON DELETE SET NULL`. Why: earned totals are permanent history.
 - Language selectors derive localized language and country labels from `Intl.DisplayNames` using the app/native locale. Why: labels stay standardized and independent of the learning language.
+- Backend is Lovable Cloud; schema, RLS, review/training functions and guard triggers were rebuilt from the documented rules in `src/lib/verba/AGENTS.md`. Why: the original database's SQL was not available.
