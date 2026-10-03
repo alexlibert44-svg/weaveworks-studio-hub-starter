@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { useI18n } from "@/lib/i18n";
 import { language, type LanguageMeta } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
 
@@ -27,8 +26,7 @@ export function LanguageSelector({ label, value, languages, onChange, disabled, 
   disabled?: boolean;
   inFrame?: boolean;
 }) {
-  const { countryName, languageName } = useI18n();
-  const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 12, left: 12 });
   const button = useRef<HTMLButtonElement>(null);
   const id = useId();
@@ -78,7 +76,7 @@ export function LanguageSelector({ label, value, languages, onChange, disabled, 
       >
         <LanguageFlag code={value} />
         <span className="min-w-0 flex-1 truncate text-start" dir="auto">
-          {languageName(value)} · {countryName(value)}
+          {language(value).native}
         </span>
         <ChevronDown className="size-4 shrink-0" />
       </Button>
@@ -107,7 +105,7 @@ export function LanguageSelector({ label, value, languages, onChange, disabled, 
               >
                 <LanguageFlag code={item.code} />
                 <span className="min-w-0 flex-1 truncate text-start" dir="auto">
-                  {languageName(item.code)} · {countryName(item.code)}
+                  {item.native}
                 </span>
                 {item.code === value && <Check className="size-4 shrink-0 text-primary-deep" />}
               </Button>

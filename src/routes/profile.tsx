@@ -44,8 +44,8 @@ function ProfilePage() {
   });
 
   const { data: points } = useQuery({
-    queryKey: ["points", deviceId],
-    queryFn: () => getPointsSummary(deviceId),
+    queryKey: ["points", deviceId, learner.learning_language],
+    queryFn: () => getPointsSummary(deviceId, learner.learning_language),
   });
 
   const avatarPath = learner.avatar_path ?? null;

@@ -144,7 +144,7 @@ function LanguageStep({
   languages?: LanguageMeta[];
   onSelect: (code: string) => void;
 }) {
-  const { countryName, languageName, t } = useI18n();
+  const { languageName, t } = useI18n();
   const [search, setSearch] = useState("");
 
   const results = useMemo<LanguageMeta[]>(() => {
@@ -154,10 +154,9 @@ function LanguageStep({
         query.length === 0 ||
         l.english.toLowerCase().includes(query) ||
         l.native.toLowerCase().includes(query) ||
-        languageName(l.code).toLocaleLowerCase().includes(query) ||
-        countryName(l.code).toLocaleLowerCase().includes(query),
+        languageName(l.code).toLocaleLowerCase().includes(query),
     );
-  }, [search, exclude, languages, languageName, countryName]);
+  }, [search, exclude, languages, languageName]);
 
   return (
     <div className="animate-rise mt-8 flex flex-1 flex-col">
@@ -192,8 +191,7 @@ function LanguageStep({
               <span className="flex min-w-0 items-center gap-3">
                 <LanguageFlag code={lang.code} />
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold">{languageName(lang.code)}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{countryName(lang.code)}</span>
+                  <span className="block truncate text-sm font-bold" dir="auto">{lang.native}</span>
                 </span>
               </span>
               {selected === lang.code ? <Check className="size-4 text-primary" /> : null}
