@@ -80,7 +80,13 @@ function AuthPage() {
       }
     } catch (err) {
       console.error("Auth error", (err as { code?: string })?.code ?? err);
-      setError(t(authErrorKey(err) as Parameters<typeof t>[0]));
+      const key = authErrorKey(err);
+      // Existing account on sign-up: move to sign-in with the email kept.
+      if (mode === "signup" && key === "auth.errExists") {
+        setMode("signin");
+        setEmail(cleanEmail);
+      }
+      setError(t(key as Parameters<typeof t>[0]));
     } finally {
       setBusy(false);
     }
