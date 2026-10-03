@@ -13,6 +13,7 @@ import { posLabel } from "@/lib/verba/pos";
 import {
   UNIT_SKILLS,
   displayProgress,
+  sharedSession,
   skillMastery,
   unitProgress,
   wordSkillItems,
@@ -69,6 +70,7 @@ function WordDetail() {
   const skillItems = wordSkillItems(items, word.id);
   const mastery = displayProgress(unitProgress(skillItems, UNIT_SKILLS), wordStatus(attempts) === "mastered");
   const status = wordStatus(attempts);
+  const session = sharedSession(attempts);
 
   return (
     <AppShell>
@@ -107,6 +109,9 @@ function WordDetail() {
           </div>
         </div>
         <MasteryBar value={mastery} className="mt-3" />
+        <p className="mt-2 text-xs font-semibold text-muted-foreground">
+          {t("word.sharedSession", { current: session.current, max: session.max })}
+        </p>
         <ul className="mt-4 space-y-3">
           {UNIT_SKILLS.map((skill) => {
             const item = skillItems.find((i) => i.skill === skill);
@@ -128,10 +133,11 @@ function WordDetail() {
                 <MasteryBar value={m.attempts === 0 ? 0 : value} className="mt-1.5 h-1.5" />
                 {m.attempts > 0 ? (
                   <p className="mt-1 text-[0.7rem] text-muted-foreground">
-                    {t("word.successes", {
+                    {t("word.skillSession", {
+                      current: session.current,
+                      max: session.max,
                       successes: m.successes,
                       attempts: m.attempts,
-                      sessions: m.sessions,
                     })}
                   </p>
                 ) : null}
