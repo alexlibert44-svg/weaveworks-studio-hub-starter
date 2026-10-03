@@ -293,6 +293,8 @@ export const en = {
   "word.status": "Status",
   "word.overall": "Word progress",
   "word.successes": "{successes}/{attempts} correct · {sessions} sessions",
+  "word.sharedSession": "Session {current}/{max}",
+  "word.skillSession": "Session {current}/{max} · {successes}/{attempts} correct",
   "word.skillMastered": "Skill mastered",
   "word.masteryRule": "A skill is mastered after 5 correct attempts in a row across at least 3 sessions.",
   "word.history": "Training history",

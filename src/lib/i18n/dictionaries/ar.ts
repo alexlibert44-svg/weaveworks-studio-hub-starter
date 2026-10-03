@@ -294,6 +294,8 @@ export const ar: Dictionary = {
   "word.status": "الحالة",
   "word.overall": "تقدّم الكلمة",
   "word.successes": "{successes}/{attempts} صحيحة · {sessions} جلسات",
+  "word.sharedSession": "الجلسة {current}/{max}",
+  "word.skillSession": "الجلسة {current}/{max} · {successes}/{attempts} صحيحة",
   "word.skillMastered": "مهارة متقنة",
   "word.masteryRule": "تُتقن المهارة بعد 5 إجابات صحيحة متتالية موزعة على 3 جلسات على الأقل.",
   "word.history": "سجل التدريب",

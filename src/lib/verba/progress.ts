@@ -155,3 +155,27 @@ export function wordStatus(attempts: SkillAttempt[], required: Skill[] = UNIT_SK
   if (relevant.length === 0) return "new";
   return required.every((s) => skillMastery(s, relevant).mastered) ? "mastered" : "learning";
 }
+
+/* ----------------------------- shared session ------------------------------ */
+
+/**
+ * One shared session stage per word, the same for every skill. A training
+ * session counts as completed for the word when it holds at least one graded
+ * answer and no wrong answer in any required skill; each session counts once.
+ * The current stage is completed + 1, capped at MASTERY_RULE.sessions.
+ * Skill percentages stay individual (see replaySkill).
+ */
+export function sharedSession(
+  attempts: SkillAttempt[],
+  required: Skill[] = UNIT_SKILLS,
+): { current: number; completed: number; max: number } {
+  const max = MASTERY_RULE.sessions;
+  const bySession = new Map<string, boolean>();
+  for (const a of attempts) {
+    if (!required.includes(a.skill)) continue;
+    const key = attemptSession(a);
+    bySession.set(key, (bySession.get(key) ?? true) && a.is_correct);
+  }
+  const completed = Math.min(max, [...bySession.values()].filter(Boolean).length);
+  return { current: Math.min(max, completed + 1), completed, max };
+}

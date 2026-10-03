@@ -294,6 +294,8 @@ export const es: Dictionary = {
   "word.status": "Estado",
   "word.overall": "Progreso de la palabra",
   "word.successes": "{successes}/{attempts} correctos · {sessions} sesiones",
+  "word.sharedSession": "Sesión {current}/{max}",
+  "word.skillSession": "Sesión {current}/{max} · {successes}/{attempts} correctos",
   "word.skillMastered": "Habilidad dominada",
   "word.masteryRule": "Una habilidad se domina tras 5 aciertos seguidos en al menos 3 sesiones.",
   "word.history": "Historial de práctica",
