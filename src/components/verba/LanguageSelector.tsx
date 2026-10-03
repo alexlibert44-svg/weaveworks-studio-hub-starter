@@ -27,7 +27,7 @@ export function LanguageSelector({ label, value, languages, onChange, disabled, 
   disabled?: boolean;
   inFrame?: boolean;
 }) {
-  const { countryName, languageName } = useI18n();
+  const { languageName } = useI18n();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 12, left: 12 });
   const button = useRef<HTMLButtonElement>(null);
@@ -78,7 +78,7 @@ export function LanguageSelector({ label, value, languages, onChange, disabled, 
       >
         <LanguageFlag code={value} />
         <span className="min-w-0 flex-1 truncate text-start" dir="auto">
-          {languageName(value)} · {countryName(value)}
+          {languageName(value)}
         </span>
         <ChevronDown className="size-4 shrink-0" />
       </Button>
@@ -107,7 +107,7 @@ export function LanguageSelector({ label, value, languages, onChange, disabled, 
               >
                 <LanguageFlag code={item.code} />
                 <span className="min-w-0 flex-1 truncate text-start" dir="auto">
-                  {languageName(item.code)} · {countryName(item.code)}
+                  {languageName(item.code)}
                 </span>
                 {item.code === value && <Check className="size-4 shrink-0 text-primary-deep" />}
               </Button>

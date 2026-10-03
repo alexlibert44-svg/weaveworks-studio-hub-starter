@@ -674,12 +674,13 @@ export interface PointsSummary {
   accuracy: number | null;
 }
 
-/** Totals from saved completed sessions (all languages). */
-export async function getPointsSummary(deviceId: string): Promise<PointsSummary> {
+/** Totals from saved completed sessions of one learning language. */
+export async function getPointsSummary(deviceId: string, targetLanguage: string): Promise<PointsSummary> {
   const { data, error } = await supabase
     .from("training_sessions")
     .select("points, total_attempts, correct_attempts, scope")
     .eq("device_id", deviceId)
+    .eq("target_language", targetLanguage)
     .eq("status", "completed");
   if (error) throw error;
   const rows = data ?? [];
