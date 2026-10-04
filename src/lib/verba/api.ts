@@ -524,11 +524,14 @@ export async function recordAttempt(
   sessionId?: string,
 ): Promise<LearningItem> {
   const update = schedule(item, score);
+  // Writing is shown as correct only at 0.9+ (a near-miss or a retry-fixed answer
+  // scores lower), so its stored outcome must use the same threshold.
+  const isCorrect = item.skill === "writing" ? score >= 0.9 : score >= 0.6;
   const { error: insertError } = await supabase.from("practice_attempts").insert({
     device_id: deviceId,
     learning_item_id: item.id,
     skill: item.skill,
-    is_correct: score >= 0.6,
+    is_correct: isCorrect,
     score,
     response: sessionId ? tagResponse(sessionId, response) : response,
     training_session_id: sessionId ?? null,
