@@ -5,7 +5,6 @@ import {
   LANGUAGES,
   isRtl,
   language,
-  localizedCountryName,
   localizedLanguageName,
   speechLocale,
   type LanguageMeta,
@@ -32,7 +31,6 @@ interface I18nValue {
   targetSpeech: string;
   languages: LanguageMeta[];
   languageName: (code: string) => string;
-  countryName: (code: string) => string;
 }
 
 // Keep one context instance across hot reloads so provider and consumers stay connected.
@@ -69,8 +67,6 @@ export function I18nProvider({
       targetSpeech: speechLocale(target.code),
       languages: LANGUAGES,
       languageName: (code: string) => localizedLanguageName(code, locale),
-      // Country names always follow the learner's native language (never the target).
-      countryName: (code: string) => localizedCountryName(code, native.code),
     };
   }, [nativeCode, targetCode]);
 
