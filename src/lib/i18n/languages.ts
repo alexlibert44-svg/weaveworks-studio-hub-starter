@@ -68,15 +68,6 @@ export function localizedLanguageName(code: string, locale: string): string {
   }
 }
 
-export function localizedCountryName(code: string, locale: string): string {
-  const item = language(code);
-  try {
-    return new Intl.DisplayNames([locale], { type: "region" }).of(item.countryCode) ?? item.countryCode;
-  } catch {
-    return item.countryCode;
-  }
-}
-
 export function isRtl(code: string | null | undefined): boolean {
   return Boolean(language(code).rtl);
 }
