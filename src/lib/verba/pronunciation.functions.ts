@@ -54,8 +54,9 @@ export const evaluatePronunciation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<PronunciationResult> => {
+    const nimKey = process.env["NVIDIA_NIM_API_KEY"];
     const key = process.env["LOVABLE_API_KEY"];
-    if (!key) throw new Error("Speech analysis is not configured for this project.");
+    if (!nimKey && !key) throw new Error("Speech analysis is not configured for this project.");
 
     const bytes = Uint8Array.from(atob(data.audioBase64), (c) => c.charCodeAt(0));
     if (bytes.byteLength < 2048) {
@@ -64,16 +65,23 @@ export const evaluatePronunciation = createServerFn({ method: "POST" })
 
     const base = data.mimeType.split(";")[0] ?? "audio/webm";
     const form = new FormData();
-    form.append("model", "openai/gpt-4o-transcribe");
+    // Prefer NVIDIA NIM (Whisper-Large-v3) when its key is configured;
+    // otherwise fall back to the built-in transcription endpoint.
+    form.append("model", nimKey ? "whisper-large-v3" : "openai/gpt-4o-transcribe");
     form.append("file", new Blob([bytes], { type: base }), `speech.${EXT[base] ?? "webm"}`);
     const language = data.locale.split("-")[0];
     if (language) form.append("language", language);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}` },
-      body: form,
-    });
+    const response = await fetch(
+      nimKey
+        ? "https://integrate.api.nvidia.com/v1/audio/transcriptions"
+        : "https://ai.gateway.lovable.dev/v1/audio/transcriptions",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${nimKey ?? key}` },
+        body: form,
+      },
+    );
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
