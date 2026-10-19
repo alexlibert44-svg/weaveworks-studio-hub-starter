@@ -30,7 +30,7 @@ const SavedV3 = z.object({
 const norm = (t: string) =>
   t.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
-async function ask(key: string, system: string, user: string): Promise<unknown> {
+async function ask(_key: string, system: string, user: string): Promise<unknown> {
   const response = await aiChat({
       model: "google/gemini-3.7-flash",
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
@@ -82,7 +82,7 @@ export const getWordGlosses = createServerFn({ method: "POST" })
       await save(words);
     }
 
-    const key = process.env["LOVABLE_API_KEY"];
+    const key = aiConfigured() ? "configured" : "";
     if (!words) {
       if (!key) throw new Error("AI is not configured for this project.");
       const list = tokens.map((t, i) => `${i}: ${t}`).join("\n");

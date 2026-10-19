@@ -1,3 +1,4 @@
+import { geminiSpeech } from "./ai.server";
 /**
  * Persistent speech audio. Each (voice, language, text) is synthesized once
  * with the existing TTS model, stored in the private `speech-audio` bucket and
@@ -21,6 +22,9 @@ async function admin() {
 }
 
 async function synthesize(text: string, language: string): Promise<{ bytes: ArrayBuffer; type: string }> {
+  const prompt = `Speak the text between <say> tags in ${language}, with native ${language} pronunciation, clearly and at a slightly slow teaching pace. Say exactly that text, word for word: do not translate it, do not read the tags, and do not add anything.\n<say>${text}</say>`;
+  const own = await geminiSpeech(prompt, "gemini-3.1-flash-tts-preview", VOICE);
+  if (own) return own;
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("Audio is not configured");
   const upstream = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
