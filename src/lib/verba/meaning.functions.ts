@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { aiChat, aiConfigured } from "./ai.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -55,7 +56,7 @@ export const getMeaningQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<MeaningQuestion> => {
-    const key = process.env["LOVABLE_API_KEY"];
+    const key = aiConfigured();
     if (!key) throw new Error("AI is not configured for this project.");
     const system = `You write distractors for a vocabulary multiple-choice question for a learner of ${data.targetLanguage} whose native language is ${data.nativeLanguage}.
 The learner sees the ${data.targetLanguage} word and must pick its meaning. The correct option is fixed (given below) — do not change it.
@@ -73,18 +74,14 @@ Correct meaning: ${data.correct}${data.context ? `\nContext sentence: ${data.con
 
     let lastError = "AI returned an invalid question.";
     for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "content-type": "application/json", "Lovable-API-Key": key },
-        body: JSON.stringify({
+      const response = await aiChat({
           model: "google/gemini-3.7-flash",
           messages: [
             { role: "system", content: system },
             { role: "user", content: user },
           ],
           response_format: { type: "json_object" },
-        }),
-      });
+        });
       if (!response.ok) {
         if (response.status === 429) throw new Error("AI is busy right now. Please try again.");
         if (response.status === 402 || response.status === 403) {

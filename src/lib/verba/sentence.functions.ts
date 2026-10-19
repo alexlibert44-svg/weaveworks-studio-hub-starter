@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { aiChat, aiConfigured } from "./ai.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -30,7 +31,7 @@ export const evaluateSentence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<SentenceEvaluation> => {
-    const key = process.env["LOVABLE_API_KEY"];
+    const key = aiConfigured();
     if (!key) throw new Error("AI is not configured for this project.");
 
     const system = `You are a precise ${data.targetLanguage} teacher. A learner wrote one sentence using a target word.
@@ -43,18 +44,14 @@ Never "correct" a sentence that is already correct: if it is correct, set correc
 "why": when corrected is not null, one or two short sentences in ${data.nativeLanguage} stating exactly what changed between the learner's sentence and the corrected one and why; else null.
 Return JSON only: {"uses_word":bool,"correct":bool,"feedback":"","corrected":null,"why":null}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "content-type": "application/json", "Lovable-API-Key": key },
-      body: JSON.stringify({
+    const response = await aiChat({
         model: "google/gemini-3.7-flash",
         messages: [
           { role: "system", content: system },
           { role: "user", content: `Target word: ${data.word}\nSentence: ${data.sentence}` },
         ],
         response_format: { type: "json_object" },
-      }),
-    });
+      });
     if (!response.ok) {
       if (response.status === 429) throw new Error("AI is busy right now. Please try again.");
       if (response.status === 402 || response.status === 403) {

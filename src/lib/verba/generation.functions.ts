@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { aiChat, aiConfigured } from "./ai.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -80,7 +81,7 @@ export const generateSetContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }) => {
-    const key = process.env["LOVABLE_API_KEY"];
+    const key = aiConfigured();
     if (!key) throw new Error("AI is not configured for this project.");
 
     const prompt = `TARGET language: ${data.targetLanguage}
@@ -90,21 +91,14 @@ Words (given by the learner, may be written in either language — always treat 
 Return this exact JSON shape:
 {"words":[{"word":"<the word exactly as given>","target_word":"<the word in ${data.targetLanguage}>","translation":"<meaning in ${data.nativeLanguage}>","pronunciation":"","part_of_speech":"","alternative_parts_of_speech":[],"difficulty":2,"tags":[],"sentences":[{"text":"","translation":"","form":"base","variation_index":0,"word_hints":[{"native":"","target":""}]}]}]}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "Lovable-API-Key": key,
-      },
-      body: JSON.stringify({
+    const response = await aiChat({
         model: "google/gemini-3.7-flash",
         messages: [
           { role: "system", content: SYSTEM },
           { role: "user", content: prompt },
         ],
         response_format: { type: "json_object" },
-      }),
-    });
+      });
 
     if (!response.ok) {
       const body = await response.text();

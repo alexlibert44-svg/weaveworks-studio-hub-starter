@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { aiChat, aiConfigured } from "./ai.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -30,15 +31,11 @@ const norm = (t: string) =>
   t.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
 async function ask(key: string, system: string, user: string): Promise<unknown> {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "content-type": "application/json", "Lovable-API-Key": key },
-    body: JSON.stringify({
+  const response = await aiChat({
       model: "google/gemini-3.7-flash",
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
       response_format: { type: "json_object" },
-    }),
-  });
+    });
   if (!response.ok) {
     if (response.status === 429) throw new Error("AI is busy right now. Please try again.");
     if (response.status === 402 || response.status === 403) throw new Error("AI credits are unavailable for this project.");
