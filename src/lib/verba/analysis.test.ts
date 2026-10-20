@@ -1,8 +1,10 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+type Row = Record<string, unknown>;
+type Tables = { word_sets: Row[]; words: Row[]; word_forms: Row[]; sentences: Row[]; learning_items: Row[] };
 const deps = vi.hoisted(() => ({
-  tables: {} as Record<string, Record<string, unknown>[]>,
+  tables: { word_sets: [], words: [], word_forms: [], sentences: [], learning_items: [] } as Tables,
   generate: vi.fn(),
   options: vi.fn(),
   audio: vi.fn(),
@@ -14,7 +16,7 @@ vi.mock("./meaning.functions", () => ({ getMeaningQuestion: deps.options }));
 vi.mock("./audio.functions", () => ({ prepareAudio: deps.audio }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: (table: string) => {
+    from: (table: keyof Tables) => {
       let action = "select";
       let values: Record<string, unknown> | Record<string, unknown>[] = {};
       const filters: ((row: Record<string, unknown>) => boolean)[] = [];
@@ -39,8 +41,8 @@ vi.mock("@/integrations/supabase/client", () => ({
         insert: (input: Record<string, unknown>[]) => { action = "insert"; values = input; return query; },
         update: (input: Record<string, unknown>) => { action = "update"; values = input; return query; },
         delete: () => { action = "delete"; return query; },
-        single: async () => ({ ...execute(), data: execute().data[0] }),
-        maybeSingle: async () => ({ ...execute(), data: execute().data[0] ?? null }),
+        single: async () => { const result = execute(); return { ...result, data: result.data[0] }; },
+        maybeSingle: async () => { const result = execute(); return { ...result, data: result.data[0] ?? null }; },
         then: (resolve: (value: ReturnType<typeof execute>) => unknown) => Promise.resolve(execute()).then(resolve),
       };
       return query;
@@ -71,7 +73,7 @@ describe("audio-independent saved learning content", () => {
     expect(deps.audio).not.toHaveBeenCalled();
     expect(deps.tables.words[0]).toMatchObject({ translation: "تفاحة", analysis_status: "ready", analysis_error: null });
     expect(deps.tables.sentences).toHaveLength(1);
-    expect(deps.tables.learning_items.map((r) => r.skill)).toEqual(["recognition", "writing", "speaking", "recall"]);
+    expect(deps.tables.learning_items.map((r) => r['skill'])).toEqual(["recognition", "writing", "speaking", "recall"]);
     expect((await setReadiness("set", "words")).ready).toBe(true);
   });
 
@@ -85,12 +87,12 @@ describe("audio-independent saved learning content", () => {
   it("retries missing options without duplicating saved sentences or exercises", async () => {
     deps.options.mockRejectedValueOnce(new Error("options-429"));
     await prepareSet("user", "set");
-    expect(deps.tables.words[0].analysis_status).toBe("failed");
+    expect(deps.tables.words[0]?.['analysis_status']).toBe("failed");
     await prepareSet("user", "set");
     await prepareSet("user", "set");
     expect(deps.generate).toHaveBeenCalledTimes(1);
     expect(deps.options).toHaveBeenCalledTimes(2);
-    expect(deps.tables.words[0].analysis_status).toBe("ready");
+    expect(deps.tables.words[0]?.['analysis_status']).toBe("ready");
     expect(deps.tables.sentences).toHaveLength(1);
     expect(deps.tables.learning_items).toHaveLength(4);
   });
@@ -100,7 +102,7 @@ describe("audio-independent saved learning content", () => {
     deps.tables.word_forms = [{ id: "form", set_id: "set", text: "apples", translation: "تفاحات", example: "Two apples.", meaning_options: null }];
     await prepareSet("user", "set");
     expect(deps.audio).not.toHaveBeenCalled();
-    expect(deps.tables.word_forms[0].meaning_options).toEqual(["كتاب", "باب", "قلم"]);
+    expect(deps.tables.word_forms[0]?.['meaning_options']).toEqual(["كتاب", "باب", "قلم"]);
     expect((await setReadiness("set", "forms")).ready).toBe(true);
   });
 });
