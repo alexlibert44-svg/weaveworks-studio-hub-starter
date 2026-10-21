@@ -73,6 +73,8 @@
 }
 
 :root {
+  /* Light theme is fixed: ignore the device's dark-mode / auto-darkening. */
+  color-scheme: light only;
   --radius: 0.875rem;
 
   --background: #FAF8FF;
