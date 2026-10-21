@@ -22,4 +22,6 @@
 - [x] Restore the Premium crown and on-demand offer cards without replacing learning content.
 - [x] Standardize graphical language flags and make the recording microphone icon white.
 - [x] Verify Premium navigation, gate dismissal, flags, and recording control in the preview.
-- [ ] Decouple word/form readiness from audio and verify analysis, retry, persistence, and isolated audio failure without new services.
+- [x] Decouple word/form readiness from audio and verify analysis, retry, persistence, and isolated audio failure without new services.
+- [x] Lock the original light theme regardless of device dark mode.
+- [x] Make AI word analysis return complete, readable answers for every word.

@@ -6,3 +6,4 @@
 - Sentence word taps read only stored data (`word_glosses` if saved, else generation-time `word_hints`); never call AI on tap.
 - Speech audio is independent of word/form analysis and cached in `audio_assets` + private `speech-audio` bucket keyed by sha256(voice|language|text); `/api/tts` serves stored files and only synthesizes on a playback cache miss. Why: audio failures cannot block learning-content readiness or affect progress, and successful audio is reused.
 - Review schedule: first-attempt accuracy of graded answers (recognition excluded) → strong ≥85%/moderate ≥60%/poor; ladder 3/7/14/30/60/120/180/270/365; long delay never advances; poor twice → stage 1; next = completion time + interval.
+- AI JSON features send a strict json_schema response format and parse with `parseAiJson` (fixes dropped closing brackets only). Why: Flash-Lite sometimes returned unbalanced JSON, failing word analysis.

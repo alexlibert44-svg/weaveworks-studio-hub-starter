@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { aiChat, aiDeps, GEMINI_FALLBACK_MODEL, GEMINI_PRIMARY_MODEL } from "./ai.server";
+import { aiChat, aiDeps, GEMINI_FALLBACK_MODEL, GEMINI_PRIMARY_MODEL, parseAiJson } from "./ai.server";
 
 const body = { model: "google/gemini-3.7-flash", messages: [{ role: "user", content: "hi" }] };
 const res = (status: number, headers: Record<string, string> = {}) => new Response("{}", { status, headers });
@@ -55,5 +55,19 @@ describe("Gemini retry and fallback", () => {
     fetchMock.mockRejectedValue(Object.assign(new Error("t"), { name: "TimeoutError" }));
     await expect(aiChat(body)).rejects.toThrow("AI request timed out");
     expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("parseAiJson", () => {
+  it("repairs a reply that drops its final closing brackets", () => {
+    const cut = '{"words":[{"word":"Sleep","sentences":[{"text":"a ] } [","word_hints":[]}]}';
+    expect(parseAiJson(cut)).toEqual({ words: [{ word: "Sleep", sentences: [{ text: "a ] } [", word_hints: [] }] }] });
+  });
+  it("strips markdown fences", () => {
+    expect(parseAiJson('```json\n{"a":1}\n```')).toEqual({ a: 1 });
+  });
+  it("still rejects text that is not JSON or is cut inside a string", () => {
+    expect(() => parseAiJson("Sorry, I cannot help")).toThrow();
+    expect(() => parseAiJson('{"words":[{"word":"Sle')).toThrow();
   });
 });

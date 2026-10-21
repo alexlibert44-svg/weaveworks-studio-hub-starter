@@ -15,8 +15,46 @@ const MAX_RETRY_AFTER_MS = 8_000;
 type ChatBody = {
   model: string;
   messages: { role: string; content: string }[];
-  response_format?: { type: string };
+  response_format?: { type: string; json_schema?: { name: string; strict?: boolean; schema: Record<string, unknown> } };
 };
+
+/** Structured-output request: the provider must return JSON matching `schema`. */
+export const jsonSchemaFormat = (name: string, schema: Record<string, unknown>) => ({
+  type: "json_schema",
+  json_schema: { name, strict: true, schema },
+});
+
+/**
+ * Parses model JSON. Strips markdown fences and, when the model drops trailing
+ * closing brackets (observed with Gemini Flash-Lite), appends exactly the
+ * missing closers. Anything else that is not valid JSON still throws.
+ */
+export function parseAiJson(content: string): unknown {
+  const cleaned = content.replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch (first) {
+    const stack: string[] = [];
+    let inString = false;
+    let escaped = false;
+    for (const ch of cleaned) {
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (ch === "\\") escaped = true;
+        else if (ch === '"') inString = false;
+        continue;
+      }
+      if (ch === '"') inString = true;
+      else if (ch === "{") stack.push("}");
+      else if (ch === "[") stack.push("]");
+      else if (ch === "}" || ch === "]") {
+        if (stack.pop() !== ch) throw first;
+      }
+    }
+    if (inString || stack.length === 0) throw first;
+    return JSON.parse(cleaned + stack.reverse().join(""));
+  }
+}
 
 const retryable = (status: number) => status === 429 || status === 503;
 

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { aiChat, aiConfigured } from "./ai.server";
+import { aiChat, aiConfigured, jsonSchemaFormat, parseAiJson } from "./ai.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -77,6 +77,36 @@ Rules:
 - "word_hints" aligns the NATIVE translation with the TARGET sentence, chunk by chunk, in the order the chunks appear in the translation. Each "native" value MUST be a substring copied verbatim from that sentence's "translation" (a single word, or a short phrase when the languages do not map one-to-one), and "target" is the matching word or phrase copied from "text". Cover every meaningful chunk of the translation; skip nothing important and never invent chunks that are not in the translation.
 Return JSON only, no prose, no markdown fences.`;
 
+const str = { type: "string" };
+const strList = { type: "array", items: str };
+const obj = (properties: Record<string, unknown>) => ({ type: "object", properties, required: Object.keys(properties) });
+/** Enforced response shape (mirrors GeneratedWord) so the model cannot return broken JSON. */
+const LESSON_SCHEMA = obj({
+  words: {
+    type: "array",
+    items: obj({
+      word: str,
+      target_word: str,
+      translation: str,
+      pronunciation: str,
+      part_of_speech: str,
+      alternative_parts_of_speech: strList,
+      difficulty: { type: "integer" },
+      tags: strList,
+      sentences: {
+        type: "array",
+        items: obj({
+          text: str,
+          translation: str,
+          form: str,
+          variation_index: { type: "integer" },
+          word_hints: { type: "array", items: obj({ native: str, target: str }) },
+        }),
+      },
+    }),
+  },
+});
+
 export const generateSetContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
@@ -97,7 +127,7 @@ Return this exact JSON shape:
           { role: "system", content: SYSTEM },
           { role: "user", content: prompt },
         ],
-        response_format: { type: "json_object" },
+        response_format: jsonSchemaFormat("lesson", LESSON_SCHEMA),
       });
 
     if (!response.ok) {
@@ -113,11 +143,9 @@ Return this exact JSON shape:
       choices?: { message?: { content?: string } }[];
     };
     const content = payload.choices?.[0]?.message?.content ?? "";
-    const cleaned = content.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-
     let parsed: unknown;
     try {
-      parsed = JSON.parse(cleaned);
+      parsed = parseAiJson(content);
     } catch {
       throw new Error("AI returned an unreadable response.");
     }

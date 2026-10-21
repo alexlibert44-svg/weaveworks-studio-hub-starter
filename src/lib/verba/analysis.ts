@@ -204,7 +204,7 @@ export async function prepareSet(deviceId: string, setId: string): Promise<void>
     supabase.from("word_forms").select("*").eq("set_id", setId),
   ]);
   const todo = ((words ?? []) as unknown as Word[]).filter((w) => !wordReady(w));
-  await inBatches(todo, 3, (w) => analyzeWord(deviceId, setId, w, langs));
+  await inBatches(todo, 2, (w) => analyzeWord(deviceId, setId, w, langs));
   await inBatches((forms ?? []) as unknown as WordForm[], 4, (f) => analyzeForm(f, langs));
 }
 
