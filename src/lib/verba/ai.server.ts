@@ -5,6 +5,12 @@
  * Keys are read server-side only, at call time.
  */
 const TIMEOUT_MS = 60_000;
+/** Per-attempt timeout for Gemini text calls (bounded so retries stay within a reasonable total). */
+const GEMINI_ATTEMPT_TIMEOUT_MS = 30_000;
+/** Verified against the models list available to GEMINI_API_KEY (Oct 2026). */
+export const GEMINI_PRIMARY_MODEL = "gemini-3.8-flash";
+export const GEMINI_FALLBACK_MODEL = "gemini-3.5-flash-lite";
+const MAX_RETRY_AFTER_MS = 8_000;
 
 type ChatBody = {
   model: string;
@@ -12,17 +18,60 @@ type ChatBody = {
   response_format?: { type: string };
 };
 
+const retryable = (status: number) => status === 429 || status === 503;
+
+function retryDelay(res: Response | null, attempt: number): number | null {
+  const header = res?.headers.get("retry-after");
+  if (header) {
+    const secs = Number(header);
+    const ms = Number.isFinite(secs) ? secs * 1000 : Date.parse(header) - Date.now();
+    if (ms > MAX_RETRY_AFTER_MS) return null; // provider asks for longer than we can wait
+    return Math.max(0, ms);
+  }
+  return Math.min(4_000, 500 * 2 ** attempt) + Math.floor(Math.random() * 250);
+}
+
+export const aiDeps = { sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)), fetch: (...a: Parameters<typeof fetch>) => fetch(...a) };
+
+/**
+ * Gemini chat with at most two retries in total for transient 429/503/timeouts:
+ * primary → primary (backoff) → fallback model. Permanent errors return at once.
+ */
+async function geminiChat(key: string, body: ChatBody): Promise<Response> {
+  const plan = [GEMINI_PRIMARY_MODEL, GEMINI_PRIMARY_MODEL, GEMINI_FALLBACK_MODEL];
+  let last: Response | null = null;
+  let lastError: unknown = null;
+  for (let i = 0; i < plan.length; i++) {
+    if (i > 0) {
+      const wait = retryDelay(last, i - 1);
+      if (wait === null) break;
+      await aiDeps.sleep(wait);
+    }
+    try {
+      const res = await aiDeps.fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json", Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ ...body, model: plan[i] }),
+        signal: AbortSignal.timeout(GEMINI_ATTEMPT_TIMEOUT_MS),
+      });
+      if (res.ok || !retryable(res.status)) return res;
+      last = res;
+      lastError = null;
+    } catch (e) {
+      const name = (e as { name?: string }).name;
+      if (name !== "TimeoutError" && name !== "AbortError") throw e;
+      last = null;
+      lastError = e;
+    }
+  }
+  if (last) return last;
+  throw lastError instanceof Error ? new Error("AI request timed out. Please try again.") : new Error("AI is unavailable.");
+}
+
 /** OpenAI-style chat completion. Returns the raw Response so callers keep their own error handling. */
 export async function aiChat(body: ChatBody): Promise<Response> {
   const gemini = process.env["GEMINI_API_KEY"];
-  if (gemini) {
-    return fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-      method: "POST",
-      headers: { "content-type": "application/json", Authorization: `Bearer ${gemini}` },
-      body: JSON.stringify({ ...body, model: body.model.replace(/^google\//, "") }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-  }
+  if (gemini) return geminiChat(gemini, body);
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured for this project.");
   return fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
