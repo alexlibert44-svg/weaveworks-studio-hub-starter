@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { aiChat, aiConfigured } from "./ai.server";
+import { aiChat, aiConfigured, jsonSchemaFormat, parseAiJson } from "./ai.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -24,6 +24,18 @@ const Output = z.object({
   distractors: z.array(Distractor).min(3),
   explanation: z.string().min(1),
 });
+
+const QUESTION_SCHEMA = {
+  type: "object",
+  properties: {
+    distractors: {
+      type: "array",
+      items: { type: "object", properties: { text: { type: "string" }, why: { type: "string" } }, required: ["text", "why"] },
+    },
+    explanation: { type: "string" },
+  },
+  required: ["distractors", "explanation"],
+};
 
 export interface MeaningQuestion {
   distractors: { text: string; why: string }[];
@@ -80,7 +92,7 @@ Correct meaning: ${data.correct}${data.context ? `\nContext sentence: ${data.con
             { role: "system", content: system },
             { role: "user", content: user },
           ],
-          response_format: { type: "json_object" },
+          response_format: jsonSchemaFormat("meaning_question", QUESTION_SCHEMA),
         });
       if (!response.ok) {
         if (response.status === 429) throw new Error("AI is busy right now. Please try again.");
@@ -91,12 +103,9 @@ Correct meaning: ${data.correct}${data.context ? `\nContext sentence: ${data.con
         continue;
       }
       const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-      const content = (payload.choices?.[0]?.message?.content ?? "")
-        .replace(/^```(?:json)?/i, "")
-        .replace(/```$/, "")
-        .trim();
+      const content = payload.choices?.[0]?.message?.content ?? "";
       try {
-        const question = validate(data.correct, JSON.parse(content));
+        const question = validate(data.correct, parseAiJson(content));
         if (question) return question;
       } catch {
         /* regenerate */
