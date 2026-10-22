@@ -3,7 +3,9 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import { GEMINI_FALLBACK_MODEL, GEMINI_PRIMARY_MODEL } from "./ai.server";
+// Same models as ai.server.ts (kept local so this client-visible module never imports server-only code).
+const GEMINI_PRIMARY_MODEL = "gemini-3.8-flash";
+const GEMINI_FALLBACK_MODEL = "gemini-3.5-flash-lite";
 
 /**
  * Real pronunciation evaluation.
