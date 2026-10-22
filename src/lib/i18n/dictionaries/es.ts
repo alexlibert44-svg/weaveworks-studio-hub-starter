@@ -282,7 +282,7 @@ export const es: Dictionary = {
   "train.recordFailedBody": "Esto no cuenta como un error. Revisa tu micrófono y graba otra vez, o continúa sin puntuación.",
   "train.analysisFailedBody": "Tu grabación estaba bien, pero el análisis no se completó. Esto no cuenta como un error. Inténtalo de nuevo.",
   "train.continueNoScore": "Continuar sin puntuación",
-  "train.writeSentenceHint": "Escribe la frase completa en el idioma que aprendes.",
+  "train.writeSentenceHint": "Escribe la palabra que falta.",
   "train.tapForHint": "Toca una palabra de la traducción para verla en el idioma que aprendes.",
   "train.writeMissing": "Palabras que faltan",
   "train.writeExtra": "Palabras de más",
