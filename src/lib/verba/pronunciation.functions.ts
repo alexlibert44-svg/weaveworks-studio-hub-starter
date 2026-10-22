@@ -3,6 +3,10 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// Same models as ai.server.ts (kept local so this client-visible module never imports server-only code).
+const GEMINI_PRIMARY_MODEL = "gemini-3.8-flash";
+const GEMINI_FALLBACK_MODEL = "gemini-3.5-flash-lite";
+
 /**
  * Real pronunciation evaluation.
  *
@@ -54,9 +58,9 @@ export const evaluatePronunciation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<PronunciationResult> => {
-    const nimKey = process.env["NVIDIA_NIM_API_KEY"];
+    const gemini = process.env["GEMINI_API_KEY"];
     const key = process.env["LOVABLE_API_KEY"];
-    if (!nimKey && !key) throw new Error("Speech analysis is not configured for this project.");
+    if (!gemini && !key) throw new Error("Speech analysis is not configured for this project.");
 
     const bytes = Uint8Array.from(atob(data.audioBase64), (c) => c.charCodeAt(0));
     if (bytes.byteLength < 2048) {
@@ -64,36 +68,13 @@ export const evaluatePronunciation = createServerFn({ method: "POST" })
     }
 
     const base = data.mimeType.split(";")[0] ?? "audio/webm";
-    const form = new FormData();
-    // Prefer NVIDIA NIM (Whisper-Large-v3) when its key is configured;
-    // otherwise fall back to the built-in transcription endpoint.
-    form.append("model", nimKey ? "whisper-large-v3" : "openai/gpt-4o-transcribe");
-    form.append("file", new Blob([bytes], { type: base }), `speech.${EXT[base] ?? "webm"}`);
     const language = data.locale.split("-")[0];
-    if (language) form.append("language", language);
-
-    const response = await fetch(
-      nimKey
-        ? "https://integrate.api.nvidia.com/v1/audio/transcriptions"
-        : "https://ai.gateway.lovable.dev/v1/audio/transcriptions",
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${nimKey ?? key}` },
-        body: form,
-      },
-    );
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      if (response.status === 429) throw new Error("Speech analysis is busy — try again shortly.");
-      if (response.status === 402 || response.status === 403) {
-        throw new Error("Speech analysis credits are unavailable for this project.");
-      }
-      throw new Error(`Speech analysis failed (${response.status}): ${body.slice(0, 160)}`);
-    }
-
-    const payload = (await response.json()) as { text?: string };
-    const transcript = (payload.text ?? "").trim();
+    // NVIDIA hosts Whisper-Large-v3 only over gRPC (grpc.nvcf.nvidia.com), which
+    // this server cannot call; its REST transcription URL returns 404. The
+    // NVIDIA_NIM_API_KEY secret is kept but unused. Gemini transcribes instead.
+    const transcript = gemini
+      ? await geminiTranscribe(gemini, data.audioBase64, base, data.locale)
+      : await gatewayTranscribe(key as string, bytes, base, language);
 
     const targetWords = tokens(data.target);
     const heard = tokens(transcript);
@@ -125,6 +106,52 @@ export const evaluatePronunciation = createServerFn({ method: "POST" })
 
     return { transcript, score, matched, missed, extra: pool };
   });
+
+function failure(status: number, body: string): Error {
+  if (status === 429 || status === 503) return new Error("Speech analysis is busy — try again shortly.");
+  if (status === 402 || status === 403) return new Error("Speech analysis credits are unavailable for this project.");
+  return new Error(`Speech analysis failed (${status}): ${body.slice(0, 160)}`);
+}
+
+/** Verbatim transcription with the owner's Gemini key; busy primary model falls back once. */
+async function geminiTranscribe(key: string, audioBase64: string, mimeType: string, locale: string): Promise<string> {
+  const prompt =
+    `Transcribe exactly what is spoken in this audio (expected language: ${locale}). ` +
+    "Write only the words actually heard, without correcting mistakes. If no speech is audible, return an empty string.";
+  let last: Response | null = null;
+  for (const model of [GEMINI_PRIMARY_MODEL, GEMINI_FALLBACK_MODEL]) {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType, data: audioBase64 } }] }],
+        generationConfig: { temperature: 0 },
+      }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+      return (json.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("").trim().replace(/^"+|"+$/g, "");
+    }
+    last = res;
+    if (res.status !== 429 && res.status !== 503) break;
+  }
+  throw failure(last?.status ?? 500, await last?.text().catch(() => "") ?? "");
+}
+
+async function gatewayTranscribe(key: string, bytes: Uint8Array, mimeType: string, language?: string): Promise<string> {
+  const form = new FormData();
+  form.append("model", "openai/gpt-4o-transcribe");
+  form.append("file", new Blob([bytes as BlobPart], { type: mimeType }), `speech.${EXT[mimeType] ?? "webm"}`);
+  if (language) form.append("language", language);
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}` },
+    body: form,
+  });
+  if (!res.ok) throw failure(res.status, await res.text().catch(() => ""));
+  return (((await res.json()) as { text?: string }).text ?? "").trim();
+}
 
 function distance(a: string, b: string): number {
   const prev = new Array<number>(b.length + 1);
