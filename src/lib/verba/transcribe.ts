@@ -93,7 +93,7 @@ export interface ChainResult {
  * produced a transcript.
  */
 export async function transcribeWithFallback(input: {
-  nvidiaKey?: string;
+  nvidiaKey?: string | undefined;
   audioBase64: string;
   mimeType: string;
   locale: string;
