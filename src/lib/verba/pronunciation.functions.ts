@@ -142,7 +142,7 @@ async function geminiTranscribe(key: string, audioBase64: string, mimeType: stri
 async function gatewayTranscribe(key: string, bytes: Uint8Array, mimeType: string, language?: string): Promise<string> {
   const form = new FormData();
   form.append("model", "openai/gpt-4o-transcribe");
-  form.append("file", new Blob([bytes], { type: mimeType }), `speech.${EXT[mimeType] ?? "webm"}`);
+  form.append("file", new Blob([bytes as BlobPart], { type: mimeType }), `speech.${EXT[mimeType] ?? "webm"}`);
   if (language) form.append("language", language);
   const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
     method: "POST",
