@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+import { transcribeWithFallback } from "./transcribe";
+
 // Same models as ai.server.ts (kept local so this client-visible module never imports server-only code).
 const GEMINI_PRIMARY_MODEL = "gemini-3.8-flash";
 const GEMINI_FALLBACK_MODEL = "gemini-3.5-flash-lite";
@@ -58,9 +60,10 @@ export const evaluatePronunciation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<PronunciationResult> => {
+    const nvidia = process.env["NVIDIA_NIM_API_KEY"];
     const gemini = process.env["GEMINI_API_KEY"];
     const key = process.env["LOVABLE_API_KEY"];
-    if (!gemini && !key) throw new Error("Speech analysis is not configured for this project.");
+    if (!nvidia && !gemini && !key) throw new Error("Speech analysis is not configured for this project.");
 
     const bytes = Uint8Array.from(atob(data.audioBase64), (c) => c.charCodeAt(0));
     if (bytes.byteLength < 2048) {
@@ -69,12 +72,18 @@ export const evaluatePronunciation = createServerFn({ method: "POST" })
 
     const base = data.mimeType.split(";")[0] ?? "audio/webm";
     const language = data.locale.split("-")[0];
-    // NVIDIA hosts Whisper-Large-v3 only over gRPC (grpc.nvcf.nvidia.com), which
-    // this server cannot call; its REST transcription URL returns 404. The
-    // NVIDIA_NIM_API_KEY secret is kept but unused. Gemini transcribes instead.
-    const transcript = gemini
-      ? await geminiTranscribe(gemini, data.audioBase64, base, data.locale)
-      : await gatewayTranscribe(key as string, bytes, base, language);
+    // NVIDIA is primary; Gemini (or the built-in gateway without a Gemini key) is the fallback.
+    const { transcript } = await transcribeWithFallback({
+      nvidiaKey: nvidia,
+      audioBase64: data.audioBase64,
+      mimeType: base,
+      locale: data.locale,
+      fallback: gemini
+        ? () => geminiTranscribe(gemini, data.audioBase64, base, data.locale)
+        : key
+          ? () => gatewayTranscribe(key, bytes, base, language)
+          : null,
+    });
 
     const targetWords = tokens(data.target);
     const heard = tokens(transcript);
