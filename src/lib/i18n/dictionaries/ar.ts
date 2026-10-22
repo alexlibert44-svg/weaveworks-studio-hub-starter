@@ -282,7 +282,7 @@ export const ar: Dictionary = {
   "train.recordFailedBody": "لا يُحتسب هذا خطأً. تحقق من الميكروفون وأعد التسجيل، أو تابع بدون تقييم.",
   "train.analysisFailedBody": "تسجيلك سليم، لكن التحليل لم يكتمل. لا يُحتسب هذا خطأً. حاول مرة أخرى.",
   "train.continueNoScore": "متابعة بدون تقييم",
-  "train.writeSentenceHint": "اكتب الجملة كاملة بلغة التعلّم.",
+  "train.writeSentenceHint": "اكتب الكلمة الناقصة.",
   "train.tapForHint": "اضغط على كلمة في الترجمة لرؤيتها باللغة التي تتعلمها.",
   "train.writeMissing": "كلمات ناقصة",
   "train.writeExtra": "كلمات زائدة",

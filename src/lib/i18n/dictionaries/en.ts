@@ -281,7 +281,7 @@ export const en = {
   "train.recordFailedBody": "This isn't counted as a mistake. Check your microphone and record again, or continue without a score.",
   "train.analysisFailedBody": "Your recording was fine, but the analysis didn't go through. This isn't counted as a mistake. Please try again.",
   "train.continueNoScore": "Continue without a score",
-  "train.writeSentenceHint": "Write the whole sentence in the language you are learning.",
+  "train.writeSentenceHint": "Write the missing word.",
   "train.tapForHint": "Tap a word in the translation to see it in the language you're learning.",
   "train.writeMissing": "Missing words",
   "train.writeExtra": "Extra words",

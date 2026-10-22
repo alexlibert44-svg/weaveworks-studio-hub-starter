@@ -282,7 +282,7 @@ export const fr: Dictionary = {
   "train.recordFailedBody": "Ce n’est pas compté comme une erreur. Vérifiez votre micro et réenregistrez, ou continuez sans note.",
   "train.analysisFailedBody": "Votre enregistrement est bon, mais l’analyse n’a pas abouti. Ce n’est pas compté comme une erreur. Réessayez.",
   "train.continueNoScore": "Continuer sans note",
-  "train.writeSentenceHint": "Écrivez toute la phrase dans la langue apprise.",
+  "train.writeSentenceHint": "Écrivez le mot manquant.",
   "train.tapForHint": "Touchez un mot de la traduction pour le voir dans la langue apprise.",
   "train.writeMissing": "Mots manquants",
   "train.writeExtra": "Mots en trop",
