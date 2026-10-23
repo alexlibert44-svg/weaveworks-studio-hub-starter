@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2, Plus, Sparkles, X } from "lucide-react";
+import { Plus, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
