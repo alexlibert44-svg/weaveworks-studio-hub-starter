@@ -281,15 +281,7 @@
   box-shadow: 0 1px 0 color-mix(in srgb, white 24%, transparent) inset, 0 10px 20px -16px color-mix(in srgb, var(--primary-deep) 40%, transparent);
 }
 
-/* Indeterminate progress bar for Word Set content generation. */
-@keyframes verba-progress-sweep {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(340%);
-  }
-}
+/* Non-looping estimated fill for Word Set content generation. */
 
 .loading-bar {
   position: relative;
@@ -305,19 +297,18 @@
   position: absolute;
   inset-block: 0;
   left: 0;
-  width: 30%;
+  width: 100%;
   border-radius: 9999px;
   background: var(--gradient-progress);
   box-shadow: 0 0 10px -3px var(--primary);
-  animation: verba-progress-sweep 1.6s cubic-bezier(0.65, 0.05, 0.36, 1) infinite;
+  transform-origin: left center;
+  transition: transform 400ms ease-out;
   will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .loading-bar-fill {
-    animation: none;
-    width: 45%;
-    transform: translateX(60%);
+    transition: none;
   }
 }
 

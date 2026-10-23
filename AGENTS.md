@@ -20,3 +20,4 @@
 - Completed training sessions retain their points when a word set is deleted; the session foreign key uses `ON DELETE SET NULL`. Why: earned totals are permanent history.
 - Language selectors show only each language's own native name from the catalogue (no country text). Why: short, standardized labels independent of the learning language.
 - Backend is Lovable Cloud; schema, RLS, review/training functions and guard triggers were rebuilt from the documented rules in `src/lib/verba/AGENTS.md`. Why: the original database's SQL was not available.
+- Word Set loading uses an isolated visual-estimate hook; only successful creation completes the fill. Why: generation exposes no measured progress and loading must not imply early completion.

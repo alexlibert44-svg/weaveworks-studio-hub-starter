@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { createSet } from "@/lib/verba/api";
 import { usePlan } from "@/lib/verba/plan";
 import { PremiumGate } from "@/components/verba/Premium";
+import { useGenerationProgress } from "@/hooks/use-generation-progress";
 
 const MIN_WORDS = 4;
 const MAX_WORDS = 10;
@@ -48,6 +49,7 @@ function AddPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const { remaining } = usePlan(deviceId);
   const limitReached = remaining === 0;
+  const generationProgress = useGenerationProgress();
 
   // The typed-but-not-yet-added word still counts: otherwise the button looks
   // disabled after the learner types their fourth word.
@@ -58,6 +60,7 @@ function AddPage() {
       : words;
 
   const create = useMutation({
+    onMutate: generationProgress.start,
     mutationFn: () =>
       createSet({
         deviceId,
@@ -69,11 +72,13 @@ function AddPage() {
         nativeLanguageName: native.english,
       }),
     onSuccess: async (setId) => {
+      await generationProgress.complete();
       await queryClient.invalidateQueries({ queryKey: ["sets", deviceId] });
       await queryClient.invalidateQueries({ queryKey: ["due", deviceId] });
       await queryClient.invalidateQueries({ queryKey: ["sets-today", deviceId] });
       void navigate({ to: "/sets/$setId", params: { setId } });
     },
+    onSettled: generationProgress.stop,
   });
 
   const addWord = () => {
@@ -104,14 +109,14 @@ function AddPage() {
         </span>
         <h1 className="mt-6 text-xl font-bold">{t("add.generating")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{t("add.generatingBody")}</p>
-        {/* Indeterminate: generation reports no real percentage, so none is shown. */}
+        {/* Conservative visual estimate, not measured generation progress. */}
         <div
           className="loading-bar mt-7"
           role="progressbar"
           aria-label={t("add.generating")}
           aria-valuetext={t("add.generatingBody")}
         >
-          <span className="loading-bar-fill" />
+          <span className="loading-bar-fill" style={{ transform: `scaleX(${generationProgress.progress})` }} />
         </div>
       </div>
     );
