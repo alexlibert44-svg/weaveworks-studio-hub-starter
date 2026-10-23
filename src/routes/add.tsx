@@ -94,13 +94,25 @@ function AddPage() {
 
   if (create.isPending) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 text-center">
+      <div
+        className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 text-center"
+        role="status"
+        aria-live="polite"
+      >
         <span className="flex size-20 items-center justify-center rounded-lg bg-primary-soft text-primary shadow-card">
           <Sparkles className="size-9" />
         </span>
         <h1 className="mt-6 text-xl font-bold">{t("add.generating")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{t("add.generatingBody")}</p>
-        <Loader2 className="mt-6 size-6 animate-spin text-primary" />
+        {/* Indeterminate: generation reports no real percentage, so none is shown. */}
+        <div
+          className="loading-bar mt-7"
+          role="progressbar"
+          aria-label={t("add.generating")}
+          aria-valuetext={t("add.generatingBody")}
+        >
+          <span className="loading-bar-fill" />
+        </div>
       </div>
     );
   }
